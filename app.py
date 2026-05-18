@@ -17,16 +17,18 @@ st.title("🏦 全銀コード検索")
 # ── 銀行検索 ──────────────────────────────────────────────────────────────────
 st.header("銀行を選ぶ")
 
-bank_query = st.text_input("銀行名・コードで絞り込み", placeholder="例: みずほ / 0001")
+bank_query = st.text_input("銀行名・コードで絞り込み（部分一致）", placeholder="例: 住友 / みずほ / 0001")
 
+q = bank_query.lower()
 filtered_banks = {
     code: b
     for code, b in banks.items()
-    if not bank_query
-    or bank_query in b["name"]
-    or bank_query in b["kana"]
-    or bank_query in b["hira"]
-    or bank_query in code
+    if not q
+    or q in b["name"]
+    or q in b["kana"].lower()
+    or q in b["hira"].lower()
+    or q in b["roma"].lower()
+    or q in code
 }
 
 if not filtered_banks:
@@ -48,21 +50,22 @@ st.divider()
 # ── 支店検索 ──────────────────────────────────────────────────────────────────
 st.header("支店を絞り込む")
 
-branch_query = st.text_input("支店名・コードで絞り込み", placeholder="例: 新宿 / 001")
+branch_query = st.text_input("支店名・コードで絞り込み（部分一致）", placeholder="例: 新宿 / shinjuku / 001")
 
 branches = selected_bank["branches"]
 if isinstance(branches, list):
-    # to_dict() がリストを返す場合の互換対応
     branches = branches[0] if branches else {}
 
+bq = branch_query.lower()
 filtered_branches = {
     code: br
     for code, br in branches.items()
-    if not branch_query
-    or branch_query in br["name"]
-    or branch_query in br["kana"]
-    or branch_query in br["hira"]
-    or branch_query in code
+    if not bq
+    or bq in br["name"]
+    or bq in br["kana"].lower()
+    or bq in br["hira"].lower()
+    or bq in br["roma"].lower()
+    or bq in code
 }
 
 st.caption(f"{len(filtered_branches)} 支店表示中（全 {len(branches)} 支店）")
