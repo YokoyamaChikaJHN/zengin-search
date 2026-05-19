@@ -37,6 +37,13 @@ def with_suffix(name: str) -> str:
         return name
     return name + '支店'
 
+_BANK_SUFFIXES = ('農協', '信金', '労金')
+
+def bank_fullname(name: str) -> str:
+    if any(name.endswith(s) for s in _BANK_SUFFIXES):
+        return name
+    return name + '銀行'
+
 st.set_page_config(page_title="全銀コード検索", page_icon="🏦", layout="wide")
 
 
@@ -71,14 +78,14 @@ if not filtered_banks:
     st.warning("該当する銀行が見つかりません。")
     st.stop()
 
-bank_options = {f"{b['code']} ｜ {b['name']}": code for code, b in filtered_banks.items()}
+bank_options = {f"{b['code']} ｜ {bank_fullname(b['name'])}": code for code, b in filtered_banks.items()}
 selected_label = st.selectbox("銀行", list(bank_options.keys()))
 selected_code = bank_options[selected_label]
 selected_bank = banks[selected_code]
 
 col1, col2, col3 = st.columns(3)
 col1.metric("銀行コード", selected_bank["code"])
-col2.metric("銀行名（カナ）", to_hankaku(selected_bank["kana"]))
+col2.metric("銀行名", bank_fullname(selected_bank["name"]))
 col3.metric("支店数", len(selected_bank["branches"]))
 
 st.divider()
