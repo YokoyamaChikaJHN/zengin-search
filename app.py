@@ -85,7 +85,7 @@ selected_bank = banks[selected_code]
 
 col1, col2, col3 = st.columns(3)
 col1.metric("銀行コード", selected_bank["code"])
-col2.metric("銀行名", bank_fullname(selected_bank["name"]))
+col2.text_input("銀行名", value=bank_fullname(selected_bank["name"]), disabled=True)
 col3.metric("支店数", len(selected_bank["branches"]))
 
 st.divider()
