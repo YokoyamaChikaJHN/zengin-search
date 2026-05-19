@@ -29,6 +29,29 @@ _HANKAKU_TABLE = str.maketrans({
 def to_hankaku(text: str) -> str:
     return text.translate(_HANKAKU_TABLE)
 
+# 全銀協規定：使用可能な半角カナ・英数・記号
+_ZENGIN_ALLOWED = frozenset(
+    'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝﾞﾟ'
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    '（）ー．／ '
+)
+
+# 全角英数字 → 半角英数字
+_FW_ALNUM_TABLE = str.maketrans(
+    'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ０１２３４５６７８９',
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+)
+
+# 長音系の文字をｰ（半角カナ長音符）に統一
+_LONGVOWEL_TABLE = str.maketrans('－‐―─', 'ｰｰｰｰ')
+
+def to_zengin_kana(text: str) -> str:
+    text = text.upper()
+    text = text.translate(_FW_ALNUM_TABLE)
+    text = text.translate(_HANKAKU_TABLE)   # 全角カナ → 半角カナ（ーもｰに変換済み）
+    text = text.translate(_LONGVOWEL_TABLE) # 残存する長音系記号をｰに統一
+    return ''.join(c for c in text if c in _ZENGIN_ALLOWED)
+
 _BRANCH_SUFFIXES = ('出張所', '営業部', '本店', 'センター', 'ローンプラザ',
                     'ローンセンター', '事務センター', 'サービスセンター')
 
@@ -95,10 +118,11 @@ selected_label = st.selectbox("銀行", list(bank_options.keys()))
 selected_code = bank_options[selected_label]
 selected_bank = banks[selected_code]
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 col1.metric("銀行コード", selected_bank["code"])
 col2.text_input("銀行名（編集不可）", value=bank_fullname(selected_bank["name"]), disabled=True)
-col3.metric("支店数", len(selected_bank["branches"]))
+col3.text_input("銀行名（カナ）", value=to_zengin_kana(selected_bank["kana"]), disabled=True)
+col4.metric("支店数", len(selected_bank["branches"]))
 
 st.divider()
 
@@ -127,7 +151,7 @@ st.caption(f"{len(filtered_branches)} 支店表示中（全 {len(branches)} 支�
 
 if filtered_branches:
     rows = [
-        {"支店コード": br["code"], "支店名": with_suffix(br["name"]), "カナ": to_hankaku(br["kana"]), "ローマ字": br["roma"]}
+        {"支店コード": br["code"], "支店名": with_suffix(br["name"]), "カナ": to_zengin_kana(br["kana"]), "ローマ字": br["roma"]}
         for br in filtered_branches.values()
     ]
     st.dataframe(rows, use_container_width=True, hide_index=True)
