@@ -1,6 +1,42 @@
 import json
 import streamlit as st
 
+# 全角カナ → 半角カナ変換テーブル
+# 濁音・半濁音は 清音＋濁点(ﾞ/ﾟ) の2文字に分解、拗音は通常文字に統一
+_HANKAKU_TABLE = str.maketrans({
+    'ガ': 'ｶﾞ', 'ギ': 'ｷﾞ', 'グ': 'ｸﾞ', 'ゲ': 'ｹﾞ', 'ゴ': 'ｺﾞ',
+    'ザ': 'ｻﾞ', 'ジ': 'ｼﾞ', 'ズ': 'ｽﾞ', 'ゼ': 'ｾﾞ', 'ゾ': 'ｿﾞ',
+    'ダ': 'ﾀﾞ', 'ヂ': 'ﾁﾞ', 'ヅ': 'ﾂﾞ', 'デ': 'ﾃﾞ', 'ド': 'ﾄﾞ',
+    'バ': 'ﾊﾞ', 'ビ': 'ﾋﾞ', 'ブ': 'ﾌﾞ', 'ベ': 'ﾍﾞ', 'ボ': 'ﾎﾞ',
+    'パ': 'ﾊﾟ', 'ピ': 'ﾋﾟ', 'プ': 'ﾌﾟ', 'ペ': 'ﾍﾟ', 'ポ': 'ﾎﾟ',
+    'ヴ': 'ｳﾞ',
+    'ア': 'ｱ', 'イ': 'ｲ', 'ウ': 'ｳ', 'エ': 'ｴ', 'オ': 'ｵ',
+    'カ': 'ｶ', 'キ': 'ｷ', 'ク': 'ｸ', 'ケ': 'ｹ', 'コ': 'ｺ',
+    'サ': 'ｻ', 'シ': 'ｼ', 'ス': 'ｽ', 'セ': 'ｾ', 'ソ': 'ｿ',
+    'タ': 'ﾀ', 'チ': 'ﾁ', 'ツ': 'ﾂ', 'テ': 'ﾃ', 'ト': 'ﾄ',
+    'ナ': 'ﾅ', 'ニ': 'ﾆ', 'ヌ': 'ﾇ', 'ネ': 'ﾈ', 'ノ': 'ﾉ',
+    'ハ': 'ﾊ', 'ヒ': 'ﾋ', 'フ': 'ﾌ', 'ヘ': 'ﾍ', 'ホ': 'ﾎ',
+    'マ': 'ﾏ', 'ミ': 'ﾐ', 'ム': 'ﾑ', 'メ': 'ﾒ', 'モ': 'ﾓ',
+    'ヤ': 'ﾔ', 'ユ': 'ﾕ', 'ヨ': 'ﾖ',
+    'ラ': 'ﾗ', 'リ': 'ﾘ', 'ル': 'ﾙ', 'レ': 'ﾚ', 'ロ': 'ﾛ',
+    'ワ': 'ﾜ', 'ヲ': 'ｦ', 'ン': 'ﾝ',
+    # 拗音（小さい仮名）→ 通常の仮名（半角）
+    'ァ': 'ｱ', 'ィ': 'ｲ', 'ゥ': 'ｳ', 'ェ': 'ｴ', 'ォ': 'ｵ',
+    'ャ': 'ﾔ', 'ュ': 'ﾕ', 'ョ': 'ﾖ', 'ッ': 'ﾂ',
+    'ー': 'ｰ', '・': '･',
+})
+
+def to_hankaku(text: str) -> str:
+    return text.translate(_HANKAKU_TABLE)
+
+_BRANCH_SUFFIXES = ('出張所', '営業部', '本店', 'センター', 'ローンプラザ',
+                    'ローンセンター', '事務センター', 'サービスセンター')
+
+def with_suffix(name: str) -> str:
+    if any(name.endswith(s) for s in _BRANCH_SUFFIXES):
+        return name
+    return name + '支店'
+
 st.set_page_config(page_title="全銀コード検索", page_icon="🏦", layout="wide")
 
 
@@ -42,7 +78,7 @@ selected_bank = banks[selected_code]
 
 col1, col2, col3 = st.columns(3)
 col1.metric("銀行コード", selected_bank["code"])
-col2.metric("銀行名（カナ）", selected_bank["kana"])
+col2.metric("銀行名（カナ）", to_hankaku(selected_bank["kana"]))
 col3.metric("支店数", len(selected_bank["branches"]))
 
 st.divider()
@@ -72,7 +108,7 @@ st.caption(f"{len(filtered_branches)} 支店表示中（全 {len(branches)} 支�
 
 if filtered_branches:
     rows = [
-        {"支店コード": br["code"], "支店名": br["name"], "カナ": br["kana"], "ローマ字": br["roma"]}
+        {"支店コード": br["code"], "支店名": with_suffix(br["name"]), "カナ": to_hankaku(br["kana"]), "ローマ字": br["roma"]}
         for br in filtered_branches.values()
     ]
     st.dataframe(rows, use_container_width=True, hide_index=True)
