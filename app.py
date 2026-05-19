@@ -37,7 +37,7 @@ def with_suffix(name: str) -> str:
         return name
     return name + '支店'
 
-_BANK_SUFFIXES = ('農協', '信金', '労金')
+_BANK_SUFFIXES = ('農協', '信金', '労金', '金庫')
 
 def bank_fullname(name: str) -> str:
     if any(name.endswith(s) for s in _BANK_SUFFIXES):
@@ -45,6 +45,18 @@ def bank_fullname(name: str) -> str:
     return name + '銀行'
 
 st.set_page_config(page_title="全銀コード検索", page_icon="🏦", layout="wide")
+
+st.markdown("""
+<style>
+/* disabled テキスト欄を通常のテキスト欄と同じ見た目に */
+input[disabled] {
+    cursor: text !important;
+    -webkit-text-fill-color: inherit !important;
+    opacity: 1 !important;
+    color: inherit !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 
 @st.cache_data
@@ -85,7 +97,7 @@ selected_bank = banks[selected_code]
 
 col1, col2, col3 = st.columns(3)
 col1.metric("銀行コード", selected_bank["code"])
-col2.text_input("銀行名", value=bank_fullname(selected_bank["name"]), disabled=True)
+col2.text_input("銀行名（編集不可）", value=bank_fullname(selected_bank["name"]), disabled=True)
 col3.metric("支店数", len(selected_bank["branches"]))
 
 st.divider()
