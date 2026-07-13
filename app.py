@@ -154,6 +154,6 @@ if filtered_branches:
         {"支店コード": br["code"], "支店名": with_suffix(br["name"]), "カナ": to_zengin_kana(br["kana"]), "ローマ字": br["roma"]}
         for br in filtered_branches.values()
     ]
-    st.dataframe(rows, use_container_width=True, hide_index=True)
+    st.dataframe(rows, width='stretch', hide_index=True)
 else:
     st.warning("該当する支店が見つかりません。")
