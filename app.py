@@ -1,4 +1,5 @@
 import json
+import os
 import streamlit as st
 
 # 全角カナ → 半角カナ変換テーブル
@@ -82,9 +83,11 @@ input[disabled] {
 """, unsafe_allow_html=True)
 
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
 @st.cache_data
 def load_banks():
-    with open("banks.json", encoding="utf-8") as f:
+    with open(os.path.join(_HERE, "banks.json"), encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -154,6 +157,6 @@ if filtered_branches:
         {"支店コード": br["code"], "支店名": with_suffix(br["name"]), "カナ": to_zengin_kana(br["kana"]), "ローマ字": br["roma"]}
         for br in filtered_branches.values()
     ]
-    st.dataframe(rows, width='stretch', hide_index=True)
+    st.dataframe(rows, use_container_width=True, hide_index=True)
 else:
     st.warning("該当する支店が見つかりません。")
